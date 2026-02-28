@@ -16,9 +16,8 @@
 
 int RunCaptureLoop(HWND window, const AppConfig& config, std::atomic<bool>& running, const CaptureRuntimeOptions& options)
 {
-    const int captureWidth = static_cast<int>(static_cast<double>(config.display_width) / config.zoom_factor);
-    const int captureHeight = static_cast<int>(static_cast<double>(config.display_height) / config.zoom_factor);
     const auto frameDelay = std::chrono::duration<double, std::milli>(ComputeFrameDelayMs(config));
+    const bool useDynamicZoom = static_cast<bool>(options.get_zoom_factor);
 
     ID3D11Device* pDevice = nullptr;
     ID3D11DeviceContext* pContext = nullptr;
@@ -56,10 +55,6 @@ int RunCaptureLoop(HWND window, const AppConfig& config, std::atomic<bool>& runn
     pDuplication->GetDesc(&dupDesc);
     const int desktopWidth = dupDesc.ModeDesc.Width;
     const int desktopHeight = dupDesc.ModeDesc.Height;
-    const int cropX = (desktopWidth - captureWidth) / 2;
-    const int cropY = (desktopHeight - captureHeight) / 2;
-    const int clipCropX = (cropX < 0) ? 0 : (cropX + captureWidth > desktopWidth ? desktopWidth - captureWidth : cropX);
-    const int clipCropY = (cropY < 0) ? 0 : (cropY + captureHeight > desktopHeight ? desktopHeight - captureHeight : cropY);
 
     D3D11_TEXTURE2D_DESC stagingDesc = {};
     stagingDesc.Width = desktopWidth;
@@ -79,26 +74,47 @@ int RunCaptureLoop(HWND window, const AppConfig& config, std::atomic<bool>& runn
     ReleaseDC(NULL, hScreenDC);
     if (!hMemoryDC) { pStaging->Release(); pDuplication->Release(); pContext->Release(); pDevice->Release(); return kCaptureStatusInitFailure; }
 
-    BITMAPINFO bmi = {};
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = captureWidth;
-    bmi.bmiHeader.biHeight = -captureHeight;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
+    int captureWidth = 0;
+    int captureHeight = 0;
+    int clipCropX = 0;
+    int clipCropY = 0;
+    HBITMAP hDib = nullptr;
+    HBITMAP hOldBitmap = nullptr;
     void* pDibBits = nullptr;
-    HBITMAP hDib = CreateDIBSection(hMemoryDC, &bmi, DIB_RGB_COLORS, &pDibBits, nullptr, 0);
-    if (!hDib || !pDibBits) {
-        DeleteDC(hMemoryDC);
-        pStaging->Release();
-        pDuplication->Release();
-        pContext->Release();
-        pDevice->Release();
-        return kCaptureStatusInitFailure;
-    }
-    HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemoryDC, hDib);
+    int dibPitch = 0;
+    int lastDibWidth = 0;
+    int lastDibHeight = 0;
 
-    const int dibPitch = captureWidth * 4;
+    if (!useDynamicZoom)
+    {
+        const double zoom = config.zoom_factor;
+        captureWidth = static_cast<int>(static_cast<double>(config.display_width) / zoom);
+        captureHeight = static_cast<int>(static_cast<double>(config.display_height) / zoom);
+        const int cropX = (desktopWidth - captureWidth) / 2;
+        const int cropY = (desktopHeight - captureHeight) / 2;
+        clipCropX = (cropX < 0) ? 0 : (cropX + captureWidth > desktopWidth ? desktopWidth - captureWidth : cropX);
+        clipCropY = (cropY < 0) ? 0 : (cropY + captureHeight > desktopHeight ? desktopHeight - captureHeight : cropY);
+
+        BITMAPINFO bmi = {};
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = captureWidth;
+        bmi.bmiHeader.biHeight = -captureHeight;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+        hDib = CreateDIBSection(hMemoryDC, &bmi, DIB_RGB_COLORS, &pDibBits, nullptr, 0);
+        if (!hDib || !pDibBits) {
+            DeleteDC(hMemoryDC);
+            pStaging->Release();
+            pDuplication->Release();
+            pContext->Release();
+            pDevice->Release();
+            return kCaptureStatusInitFailure;
+        }
+        hOldBitmap = (HBITMAP)SelectObject(hMemoryDC, hDib);
+        dibPitch = captureWidth * 4;
+    }
+
     int status = kCaptureStatusSuccess;
 
     auto copyFrameToDib = [&]() -> int {
@@ -135,6 +151,61 @@ int RunCaptureLoop(HWND window, const AppConfig& config, std::atomic<bool>& runn
 
     while (running.load())
     {
+        if (options.should_pause && options.should_pause())
+        {
+            RECT rc;
+            GetClientRect(window, &rc);
+            HDC hdc = GetDC(window);
+            FillRect(hdc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
+            ReleaseDC(window, hdc);
+            std::this_thread::sleep_for(frameDelay);
+            continue;
+        }
+
+        if (useDynamicZoom)
+        {
+            const double zoom = options.get_zoom_factor();
+            captureWidth = static_cast<int>(static_cast<double>(config.display_width) / zoom);
+            captureHeight = static_cast<int>(static_cast<double>(config.display_height) / zoom);
+            if (captureWidth < 1) captureWidth = 1;
+            if (captureHeight < 1) captureHeight = 1;
+            const int cropX = (desktopWidth - captureWidth) / 2;
+            const int cropY = (desktopHeight - captureHeight) / 2;
+            clipCropX = (cropX < 0) ? 0 : (cropX + captureWidth > desktopWidth ? desktopWidth - captureWidth : cropX);
+            clipCropY = (cropY < 0) ? 0 : (cropY + captureHeight > desktopHeight ? desktopHeight - captureHeight : cropY);
+
+            if (!hDib || captureWidth != lastDibWidth || captureHeight != lastDibHeight)
+            {
+                if (hDib)
+                {
+                    SelectObject(hMemoryDC, hOldBitmap);
+                    DeleteObject(hDib);
+                }
+                BITMAPINFO bmi = {};
+                bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+                bmi.bmiHeader.biWidth = captureWidth;
+                bmi.bmiHeader.biHeight = -captureHeight;
+                bmi.bmiHeader.biPlanes = 1;
+                bmi.bmiHeader.biBitCount = 32;
+                bmi.bmiHeader.biCompression = BI_RGB;
+                pDibBits = nullptr;
+                hDib = CreateDIBSection(hMemoryDC, &bmi, DIB_RGB_COLORS, &pDibBits, nullptr, 0);
+                if (!hDib || !pDibBits) {
+                    if (hDib) DeleteObject(hDib);
+                    DeleteDC(hMemoryDC);
+                    pStaging->Release();
+                    pDuplication->Release();
+                    pContext->Release();
+                    pDevice->Release();
+                    return kCaptureStatusInitFailure;
+                }
+                hOldBitmap = (HBITMAP)SelectObject(hMemoryDC, hDib);
+                dibPitch = captureWidth * 4;
+                lastDibWidth = captureWidth;
+                lastDibHeight = captureHeight;
+            }
+        }
+
         int frameResult = copyFrameToDib();
         if (frameResult == 2)
         {
@@ -166,8 +237,11 @@ int RunCaptureLoop(HWND window, const AppConfig& config, std::atomic<bool>& runn
         std::this_thread::sleep_for(frameDelay);
     }
 
-    SelectObject(hMemoryDC, hOldBitmap);
-    DeleteObject(hDib);
+    if (hDib)
+    {
+        SelectObject(hMemoryDC, hOldBitmap);
+        DeleteObject(hDib);
+    }
     DeleteDC(hMemoryDC);
     pStaging->Release();
     pDuplication->Release();

@@ -125,8 +125,8 @@ void ValidateConfigOrFail(const AppConfig& config)
         throw std::runtime_error("zoom_factor must be a finite number > 0.");
     if (!std::isfinite(config.frames_per_second) || config.frames_per_second <= 0.0)
         throw std::runtime_error("frames_per_second must be a finite number > 0.");
-    if (!config.behaviour.empty() && config.behaviour != "crosshairs")
-        throw std::runtime_error("behaviour must be \"crosshairs\" or omitted.");
+    if (!config.behaviour.empty() && config.behaviour != "crosshairs" && config.behaviour != "flex")
+        throw std::runtime_error("behaviour must be \"crosshairs\", \"flex\", or omitted.");
 
     const int captureWidth = static_cast<int>(static_cast<double>(config.display_width) / config.zoom_factor);
     const int captureHeight = static_cast<int>(static_cast<double>(config.display_height) / config.zoom_factor);

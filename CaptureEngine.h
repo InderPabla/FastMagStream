@@ -18,6 +18,8 @@ using OverlayCallback = std::function<void(const CaptureOverlayContext&)>;
 struct CaptureRuntimeOptions
 {
     OverlayCallback overlay_callback;
+    std::function<bool()> should_pause;
+    std::function<double()> get_zoom_factor;
 };
 
 enum CaptureRunStatus

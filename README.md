@@ -38,7 +38,13 @@ Required keys:
 
 Optional:
 
-- `behaviour`: overlay mode, e.g. `"crosshairs"` to draw centre crosshairs; omit or leave empty for no overlay.
+- `behaviour`: `"crosshairs"` to draw centre crosshairs; `"flex"` for interactive pause and zoom (see below); omit or leave empty for no overlay.
+
+When `behaviour = "flex"`:
+
+- **F1**: toggle stream on/off (black screen when off).
+- **F2**: toggle zoom-input mode. When on, numpad 1–9 set a zoom multiplier.
+- **Numpad 1–9** (with F2 on): set multiplier applied to the TOML `zoom_factor` (effective zoom = `zoom_factor × multiplier`). Multipliers: 1→1.0, 2→1.25, 3→1.5, 4→1.75, 5→2.0, 6→2.25, 7→2.5, 8→2.75, 9→3.0. Example: `zoom_factor = 2` and numpad 3 → effective zoom 3.
 
 Example `fastmagstream.toml`:
 
@@ -50,6 +56,7 @@ record_height = 1440
 zoom_factor = 2.0
 frames_per_second = 60
 # behaviour = "crosshairs"
+# behaviour = "flex"
 ```
 
 Run:
