@@ -2,10 +2,6 @@
 
 Real-time magnified screen capture for Windows using the DXGI Desktop Duplication API (`D3D11`/`DXGI`) with `GDI` presentation. The project is structured around a reusable core library that owns capture, frame transfer, and present flow, while allowing optional extension points.
 
-## Library Approach
-
-The core engine exposes a single capture loop and a callback hook for optional post-processing. The hook runs after frame data is prepared in memory and before the frame is presented, so custom drawing or processing can be injected without changing the default render path.
-
 ## Architecture Diagram
 
 ```mermaid
@@ -24,6 +20,8 @@ flowchart LR
     CAP --> D3D --> DXGI --> STAGE --> HOOK --> GDI --> WIN
     UI -."stop signal".-> CAP
 ```
+
+
 
 ## Configuration (TOML)
 
@@ -54,6 +52,24 @@ Run:
 ```powershell
 .\FastMagStream.exe --config .\fastmagstream.toml
 ```
+
+## Zoom Showcase
+
+| Normal Zoom | 2x Zoom |
+|---|---|
+| <img src="./Example/NormalZoom.png" alt="Normal Zoom" width="360" /> | <img src="./Example/Zoom2x.png" alt="2x Zoom" width="360" /> |
+
+| Bino Normal Zoom | Bino 2x Zoom |
+|---|---|
+| <img src="./Example/Bino_NormalZoom.png" alt="Bino Normal Zoom" width="360" /> | <img src="./Example/Bino_Zoom2x.png" alt="Bino 2x Zoom" width="360" /> |
+
+| Bino Normal Zoom | Bino 2x Zoom |
+|---|---|
+| <img src="./Example/Bino_NormalZoom.gif" alt="Bino Normal Zoom GIF" width="360" /> | <img src="./Example/Bino_Zoom2x.gif" alt="Bino 2x Zoom GIF" width="360" /> |
+
+| Non affected frame rate |
+|---|
+| <img src="./Example/NonAffectedSourceFramerate.png" alt="Non affected frame rate" width="360" /> |
 
 ## Build
 
