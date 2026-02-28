@@ -68,6 +68,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(reinterpret_cast<LPCREATESTRUCTW>(lParam)->lpCreateParams));
         break;
+    case WM_ACTIVATE:
+        if (LOWORD(wParam) != WA_INACTIVE)
+            SetFocus(hwnd);
+        break;
     case WM_DESTROY:
         g_captureRunning = false;
         PostQuitMessage(0);
@@ -81,8 +85,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 flex->stream_paused = !flex->stream_paused.load();
             else if (wParam == VK_F2)
                 flex->zoom_input_mode = !flex->zoom_input_mode.load();
-            else if (wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD9 && flex->zoom_input_mode.load())
-                flex->set_multiplier(NumpadKeyToMultiplier(wParam));
+            else if (flex->zoom_input_mode.load())
+            {
+                if (wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD9)
+                    flex->set_multiplier(NumpadKeyToMultiplier(wParam));
+                else if (wParam >= 0x31 && wParam <= 0x39)  // number row '1'-'9'
+                    flex->set_multiplier(NumpadKeyToMultiplier(VK_NUMPAD1 + (wParam - 0x31)));
+            }
         }
         break;
     }
@@ -169,6 +178,7 @@ int CaptureWindowHost::Run(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
+    SetFocus(hwnd);
 
     CaptureRuntimeOptions options{};
     options.overlay_callback = GetOverlayForBehaviour(config.behaviour);
