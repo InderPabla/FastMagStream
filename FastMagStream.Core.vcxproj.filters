@@ -17,12 +17,18 @@
     <ClCompile Include="CaptureEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CaptureWindowHost.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CaptureEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureWindowHost.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
