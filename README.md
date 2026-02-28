@@ -36,6 +36,10 @@ Required keys:
 - `zoom_factor`
 - `frames_per_second`
 
+Optional:
+
+- `behaviour`: overlay mode, e.g. `"crosshairs"` to draw centre crosshairs; omit or leave empty for no overlay.
+
 Example `fastmagstream.toml`:
 
 ```toml
@@ -45,6 +49,7 @@ record_width = 2560
 record_height = 1440
 zoom_factor = 2.0
 frames_per_second = 60
+# behaviour = "crosshairs"
 ```
 
 Run:

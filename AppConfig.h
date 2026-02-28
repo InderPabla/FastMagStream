@@ -10,6 +10,7 @@ struct AppConfig
     int record_height;
     double zoom_factor;
     double frames_per_second;
+    std::string behaviour;  // optional: "crosshairs" or empty
 };
 
 std::wstring GetConfigPathFromArgsOrFail();

@@ -5,6 +5,7 @@
 #include "CaptureWindowHost.h"
 #include "AppConfig.h"
 #include "CaptureEngine.h"
+#include "OverlayCallbacks.h"
 
 #include <Windows.h>
 #include <atomic>
@@ -53,12 +54,10 @@ const char* CaptureStatusMessage(int status)
 
 CaptureWindowHost::CaptureWindowHost(std::wstring window_class_name,
                                      std::wstring window_title,
-                                     std::string error_title,
-                                     OverlayCallback overlay_callback)
+                                     std::string error_title)
     : window_class_name_(std::move(window_class_name))
     , window_title_(std::move(window_title))
     , error_title_(std::move(error_title))
-    , overlay_callback_(std::move(overlay_callback))
 {
 }
 
@@ -108,7 +107,7 @@ int CaptureWindowHost::Run(HINSTANCE hInstance, int nCmdShow)
     UpdateWindow(hwnd);
 
     CaptureRuntimeOptions options{};
-    options.overlay_callback = overlay_callback_;
+    options.overlay_callback = GetOverlayForBehaviour(config.behaviour);
 
     std::thread captureThread([&]() {
         const int status = RunCaptureLoop(hwnd, config, g_captureRunning, options);

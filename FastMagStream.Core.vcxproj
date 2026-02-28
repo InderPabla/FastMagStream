@@ -114,11 +114,13 @@
     <ClCompile Include="AppConfig.cpp" />
     <ClCompile Include="CaptureEngine.cpp" />
     <ClCompile Include="CaptureWindowHost.cpp" />
+    <ClCompile Include="OverlayCallbacks.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppConfig.h" />
     <ClInclude Include="CaptureEngine.h" />
     <ClInclude Include="CaptureWindowHost.h" />
+    <ClInclude Include="OverlayCallbacks.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

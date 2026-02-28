@@ -13,7 +13,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
     CaptureWindowHost host(
         L"FastMagStreamBasicWindowClass",
         L"FastMagStream - Basic",
-        "FastMagStream",
-        nullptr);
+        "FastMagStream");
     return host.Run(hInstance, nCmdShow);
 }
