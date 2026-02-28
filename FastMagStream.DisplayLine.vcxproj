@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{33eaf9ba-d2ca-4ae7-ac01-dc94cc6dfc57}</ProjectGuid>
-    <RootNamespace>FastMagStreamExampleBasic</RootNamespace>
+    <ProjectGuid>{7b878db6-4bd2-46cb-b1ff-e34e5dad7530}</ProjectGuid>
+    <RootNamespace>FastMagStreamDisplayLine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -131,7 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="FastMagStream.cpp" />
+    <ClCompile Include="ExampleDisplayLine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="FastMagStream.Core.vcxproj">

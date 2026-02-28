@@ -1,6 +1,10 @@
 # FastMagStream
 
-Real-time magnified screen viewer for Windows using the DXGI Desktop Duplication API (`D3D11`/`DXGI`) plus `GDI` presentation. FastMagStream uses `D3D11` to create the GPU device and device context used for desktop frame access through `DXGI` Output Duplication. Captured frames are read back through a staging texture and presented as a magnified view in the application window via `GDI` (`StretchBlt`).
+Real-time magnified screen capture for Windows using the DXGI Desktop Duplication API (`D3D11`/`DXGI`) with `GDI` presentation. The project is structured around a reusable core library that owns capture, frame transfer, and present flow, while allowing optional extension points.
+
+## Library Approach
+
+The core engine exposes a single capture loop and a callback hook for optional post-processing. The hook runs after frame data is prepared in memory and before the frame is presented, so custom drawing or processing can be injected without changing the default render path.
 
 ## Architecture Diagram
 
@@ -12,11 +16,12 @@ flowchart LR
     D3D["D3D11<br/>Device + DeviceContext"]
     DXGI["DXGI Output Duplication<br/>AcquireNextFrame"]
     STAGE["Staging Texture<br/>GPU -> CPU Readback"]
+    HOOK["Optional Hook<br/>Overlay Callback"]
     GDI["GDI<br/>DIB + StretchBlt"]
     WIN["FastMagStream Window"]
 
     UI --> CAP
-    CAP --> D3D --> DXGI --> STAGE --> GDI --> WIN
+    CAP --> D3D --> DXGI --> STAGE --> HOOK --> GDI --> WIN
     UI -."stop signal".-> CAP
 ```
 
@@ -44,7 +49,7 @@ zoom_factor = 2.0
 frames_per_second = 60
 ```
 
-Run example:
+Run:
 
 ```powershell
 .\FastMagStream.exe --config .\fastmagstream.toml
@@ -52,6 +57,6 @@ Run example:
 
 ## Build
 
-- Project: Visual Studio C++ project (`FastMagStream.vcxproj`)
+- Solution: `FastMagStream.slnx` (includes executable + core library projects)
 - Dependencies: Windows SDK (`d3d11.lib`, `dxgi.lib`) and vendored `toml++` header
 - Platform: Windows (Desktop Duplication requires Windows 8+)

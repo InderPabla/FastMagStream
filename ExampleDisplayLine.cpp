@@ -1,4 +1,4 @@
-// FastMagStream.cpp : Example.Basic executable entrypoint.
+// ExampleDisplayLine.cpp : Example.DisplayLine executable entrypoint.
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -18,9 +18,19 @@ namespace
 std::atomic<bool> g_captureRunning{ true };
 std::atomic<int> g_captureStatus{ kCaptureStatusSuccess };
 
-void ShowError(const std::string& message, const char* title = "FastMagStream")
+void ShowError(const std::string& message, const char* title = "FastMagStream Example.DisplayLine")
 {
     MessageBoxA(nullptr, message.c_str(), title, MB_OK | MB_ICONERROR);
+}
+
+void DrawCenterLine(const CaptureOverlayContext& context)
+{
+    HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+    HPEN hOldPen = (HPEN)SelectObject(context.memory_dc, hPen);
+    MoveToEx(context.memory_dc, context.capture_width / 2, context.capture_height / 2 - 3, NULL);
+    LineTo(context.memory_dc, context.capture_width / 2, context.capture_height / 2 + 3);
+    SelectObject(context.memory_dc, hOldPen);
+    DeleteObject(hPen);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -70,7 +80,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
     WNDCLASSW wc = {};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = L"FastMagStreamBasicWindowClass";
+    wc.lpszClassName = L"FastMagStreamDisplayLineWindowClass";
     if (!RegisterClassW(&wc))
     {
         ShowError("Failed to register window class.", "FastMagStream Startup Error");
@@ -79,7 +89,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
 
     HWND hwnd = CreateWindowW(
         wc.lpszClassName,
-        L"FastMagStream - Basic",
+        L"FastMagStream - Display Line Example",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT,
         config.display_width, config.display_height,
@@ -95,6 +105,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
     UpdateWindow(hwnd);
 
     CaptureRuntimeOptions options{};
+    options.overlay_callback = DrawCenterLine;
+
     std::thread captureThread([&]() {
         const int status = RunCaptureLoop(hwnd, config, g_captureRunning, options);
         g_captureStatus = status;

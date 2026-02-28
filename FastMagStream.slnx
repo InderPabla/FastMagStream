@@ -4,4 +4,6 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="FastMagStream.vcxproj" Id="33eaf9ba-d2ca-4ae7-ac01-dc94cc6dfc57" />
+  <Project Path="FastMagStream.Core.vcxproj" Id="cd12136e-3107-4721-8969-f91ebe7277c0" />
+  <Project Path="FastMagStream.DisplayLine.vcxproj" Id="7b878db6-4bd2-46cb-b1ff-e34e5dad7530" />
 </Solution>
