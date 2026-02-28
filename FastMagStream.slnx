@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="FastMagStream.vcxproj" Id="33eaf9ba-d2ca-4ae7-ac01-dc94cc6dfc57" />
+</Solution>
